@@ -206,7 +206,7 @@ class Request {
         })
     }
 
-    // 助教给的，TODO：记笔记
+    // 助教给的
     toString() {
         let stream = [
             `${this.method} ${this.path} HTTP/1.1\r\n`,
