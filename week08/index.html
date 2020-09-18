@@ -27,8 +27,13 @@
         [0, 0, 0]
     ];
 
+    let color = 1;
+
     function show() {
         let board = document.getElementById('board');
+
+        board.innerHTML = ''; // 重画棋盘前先清空一下
+
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 let cell = document.createElement("div");
@@ -36,13 +41,21 @@
                 cell.innerText =
                     pattern[i][j] === 2 ? 'X' :
                         pattern[i][j] === 1 ? 'O' : '';
+                cell.addEventListener('click', () => move(i, j));
                 board.appendChild(cell);
             }
             board.appendChild(document.createElement('br'));
         }
     }
 
-    show(pattern);
+    function move(x, y) {
+        // 1,2 来回切换
+        pattern[x][y] = color;
+        color = 3 - color; // 除了用减法，还能用除法
+        show();
+    }
+
+    show();
 
 
     console.log(pattern)
