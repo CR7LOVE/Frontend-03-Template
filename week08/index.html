@@ -22,8 +22,8 @@
 <div id="board"></div>
 <script>
     let pattern = [
-        [0, 0, 0],
-        [0, 0, 0],
+        [0, 0, 2],
+        [0, 1, 0],
         [0, 0, 0]
     ];
 
@@ -131,17 +131,50 @@
                 let tmp = clone(pattern);
                 tmp[i][j] = color; // 重要，尝试走这一步，看能不能赢，不行的话，最终要把所有空节点走完。
                 if (check(tmp, color)) {
-                    return true;
+                    return [i, j];
                 }
             }
         }
-        return false;
+        return null;
+    }
+
+    function bestChoice(pattern, color) {
+        let p = willWin(pattern, color);
+        if (p) { // 这里不是 ===，而是 =
+            return {
+                point: p, // 位置
+                result: 1 // 结果：输，赢，平；-1， + 1，0。初始值是 -2
+            }
+        }
+        let result = -2; // 初始值是 -2
+        let point = null;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (pattern[i][j]) { // 只检查空的地方，所以不空的话就 continue
+                    continue;
+                }
+                let tmp = clone(pattern);
+                tmp[i][j] = color; // 模拟走棋，这里先走一步，接下来对方会执行 bestChoice() 来找出最佳/最差
+                let r = bestChoice(tmp, 3 - color).result; // 3 - color 表示对方，这里是对方策略的结果
+
+                // r 是对方最佳选择，-r 则是对方的最差选择，即是我方最佳选择
+                if (-r > result) { // - r
+                    result = -r;
+                    point = [i, j]
+                }
+            }
+        }
+        return {
+            point: point,
+            result: point ? result : 0 // 平是 0
+        }
+
     }
 
     show();
+    console.log(bestChoice(pattern, color))
 
 
-    console.log(pattern)
 </script>
 </body>
 </html>
