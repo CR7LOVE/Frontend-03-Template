@@ -51,14 +51,17 @@
     function move(x, y) {
         // 1,2 来回切换
         pattern[x][y] = color;
-        if (check()) {
+        if (check(pattern, color)) {
             alert(color === 2 ? 'X is winner!' : 'O is winner!')
         }
         color = 3 - color; // 除了用减法，还能用除法
         show();
+        if(willWin(pattern, color)) {
+            console.log(color === 2 ? 'X will win!' : 'O will win!');
+        }
     }
 
-    function check() {
+    function check(pattern, color) {
         // 三行
         for (let i = 0; i < 3; i++) {
             let win = true;
@@ -113,6 +116,26 @@
         }
         return false;
 
+    }
+
+    function clone(pattern) {
+        return JSON.parse(JSON.stringify(pattern));
+    }
+
+    function willWin(pattern, color) {
+        for(let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (pattern[i][j]) {
+                    continue;
+                }
+                let tmp = clone(pattern);
+                tmp[i][j] = color; // 重要，尝试走这一步，看能不能赢，不行的话，最终要把所有空节点走完。
+                if (check(tmp, color)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     show();
