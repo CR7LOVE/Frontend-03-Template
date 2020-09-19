@@ -41,21 +41,34 @@
                 cell.innerText =
                     pattern[i * 3 + j] === 2 ? 'X' :
                         pattern[i * 3 + j] === 1 ? 'O' : '';
-                cell.addEventListener('click', () => move(i, j));
+                cell.addEventListener('click', () => userMove(i, j));
                 board.appendChild(cell);
             }
             board.appendChild(document.createElement('br'));
         }
     }
 
-    function move(x, y) {
-        // 1,2 来回切换
+    function userMove(x, y) {
         pattern[x * 3 + y] = color;
+        if (check(pattern, color)) {
+            alert(color === 2 ? 'X is winner !' : 'O is winner')
+        }
+        color = 3 - color;
+        show();
+        computerMove(); // 电脑走
+    }
+
+    function computerMove() {
+        let choice = bestChoice(pattern, color);
+        if (choice.point) {
+            console.log('choice.point', choice.point);
+            console.log('choice.point[0] * 3 + choice.point[1]', choice.point[0] * 3 + choice.point[1]);
+            pattern[choice.point[0] * 3 + choice.point[1]] = color; // point 是位置，这里将二维的坐标转成一维的值，以左上角为起点，横是 y，纵是 x。可以看上两步打印的 log
+        }
         if (check(pattern, color)) {
             alert(color === 2 ? 'X is winner!' : 'O is winner!')
         }
-        color = 3 - color; // 除了用减法，还能用除法
-        console.log(bestChoice(pattern, color)); // 一方下完后，另一方的结局
+        color = 3 - color;
         show();
     }
 
