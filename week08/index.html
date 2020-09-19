@@ -22,9 +22,9 @@
 <div id="board"></div>
 <script>
     let pattern = [
-        [0, 0, 2],
-        [0, 1, 0],
-        [0, 0, 0]
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0,
     ];
 
     let color = 1;
@@ -39,8 +39,8 @@
                 let cell = document.createElement("div");
                 cell.classList.add('cell');
                 cell.innerText =
-                    pattern[i][j] === 2 ? 'X' :
-                        pattern[i][j] === 1 ? 'O' : '';
+                    pattern[i * 3 + j] === 2 ? 'X' :
+                        pattern[i * 3 + j] === 1 ? 'O' : '';
                 cell.addEventListener('click', () => move(i, j));
                 board.appendChild(cell);
             }
@@ -50,15 +50,13 @@
 
     function move(x, y) {
         // 1,2 来回切换
-        pattern[x][y] = color;
+        pattern[x * 3 + y] = color;
         if (check(pattern, color)) {
             alert(color === 2 ? 'X is winner!' : 'O is winner!')
         }
         color = 3 - color; // 除了用减法，还能用除法
+        console.log(bestChoice(pattern, color)); // 一方下完后，另一方的结局
         show();
-        if(willWin(pattern, color)) {
-            console.log(color === 2 ? 'X will win!' : 'O will win!');
-        }
     }
 
     function check(pattern, color) {
@@ -66,7 +64,7 @@
         for (let i = 0; i < 3; i++) {
             let win = true;
             for (let j = 0; j < 3; j++) {
-                if (pattern[i][j] !== color) {
+                if (pattern[i * 3 + j] !== color) {
                     win = false;
                 }
             }
@@ -79,7 +77,7 @@
         for (let i = 0; i < 3; i++) {
             let win = true;
             for (let j = 0; j < 3; j++) {
-                if (pattern[j][i] !== color) {
+                if (pattern[j * 3 + i] !== color) {
                     win = false;
                 }
             }
@@ -93,7 +91,7 @@
         {
             let win = true;
             for (let i = 0; i < 3; i++) {
-                if (pattern[i][i] !== color) {
+                if (pattern[i * 3 + i] !== color) {
                     win = false;
                 }
             }
@@ -106,7 +104,7 @@
         {
             let win = true;
             for (let i = 0; i < 3; i++) {
-                if (pattern[i][2 - i] !== color) {
+                if (pattern[i * 3 + 2 - i] !== color) {
                     win = false;
                 }
             }
@@ -119,17 +117,17 @@
     }
 
     function clone(pattern) {
-        return JSON.parse(JSON.stringify(pattern));
+        return Object.create(pattern); // 节省内存空间
     }
 
     function willWin(pattern, color) {
         for(let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
-                if (pattern[i][j]) {
+                if (pattern[i * 3 + j]) {
                     continue;
                 }
                 let tmp = clone(pattern);
-                tmp[i][j] = color; // 重要，尝试走这一步，看能不能赢，不行的话，最终要把所有空节点走完。
+                tmp[i * 3 + j] = color; // 重要，尝试走这一步，看能不能赢，不行的话，最终要把所有空节点走完。
                 if (check(tmp, color)) {
                     return [i, j];
                 }
@@ -139,28 +137,31 @@
     }
 
     function bestChoice(pattern, color) {
-        let p = willWin(pattern, color);
-        if (p) { // 这里不是 ===，而是 =
+        let point = willWin(pattern, color);
+        if (point) { // 这里不是 ===，而是 =
             return {
-                point: p, // 位置
-                result: 1 // 结果：输，赢，平；-1， + 1，0。初始值是 -2
+                point: point, // 位置
+                result: 1 // 结果：输，赢，平；-1， + 1，0。
             }
         }
-        let result = -2; // 初始值是 -2
-        let point = null;
-        for (let i = 0; i < 3; i++) {
+        let result = -1;
+        outer:for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
-                if (pattern[i][j]) { // 只检查空的地方，所以不空的话就 continue
+                if (pattern[i * 3 + j] !== 0) { // 只检查空的地方，所以不空的话就 continue
                     continue;
                 }
                 let tmp = clone(pattern);
-                tmp[i][j] = color; // 模拟走棋，这里先走一步，接下来对方会执行 bestChoice() 来找出最佳/最差
-                let r = bestChoice(tmp, 3 - color).result; // 3 - color 表示对方，这里是对方策略的结果
+                tmp[i * 3 + j] = color; // 模拟走棋，这里先走一步，接下来对方会执行 bestChoice() 来找出最佳/最差
+                let opp = bestChoice(tmp, 3 - color); // 3 - color 表示对方，这里是对方策略的结果
 
-                // r 是对方最佳选择，-r 则是对方的最差选择，即是我方最佳选择
-                if (-r > result) { // - r
-                    result = -r;
-                    point = [i, j]
+                // opp 是对方最佳选择，-opp 则是对方的最差选择，即是我方最佳选择
+                if (-opp.result >= result) { // - opp
+                    point = [i, j];
+                    result = -opp.result;
+                }
+
+                if(result === 1) {
+                    break outer; // break 掉两层循环，即，result 是 1 的话，退出两层循环
                 }
             }
         }
@@ -172,7 +173,6 @@
     }
 
     show();
-    console.log(bestChoice(pattern, color))
 
 
 </script>
