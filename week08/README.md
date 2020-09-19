@@ -44,6 +44,23 @@
 #### 4. 人机对战，机器自动走最佳棋子
 其实和己方一样，只不过机器多了一步"找最佳选择"，而这一步，己方是自己想，机器则是用算法想。
 
+# 第 8 周第 3 节内容：异步编程 | async 异步编程
+## 一. JS 异步机制：callback/Promise/async  
+1. callback： 会有嵌套地狱的问题。  
+2. Promise： 仍然是回调，只不过用链式代替了嵌套。Promise 中可以使用 setTimeout，等待一定时间执行；也可以添加事件，此时需要事件发生才 resolve()。  
+`
+new Promise((resolve, reject) => {
+    element.addEventListener(eventName, resolve);
+})
+`  
+3. async/await：用同步代码来执行异步。
+
+## 二. generator
+1. 执行后返回一个遍历器对象，有 next()，调用后，返回一个对象 { value, done }  
+2. generator 遇到 yield 会停下来，co 模块可以让它自动执行。
+3. generator + co = async/await
+4. async generator 与 for await of：generator 中也可以返回一个异步遍历器，可以用 for await of 去遍历。  
+    我的理解是 generator 中如果 yield 后面是异步，那么返回的就是异步遍历器，要用 for await of，否则用 for of 就行。
 
 
 
