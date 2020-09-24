@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .cell {
+            width: 6px;
+            height: 6px;
+            background-color: lightgray;
+            border-bottom: 1px solid white;
+            border-right: 1px solid white;
+        }
+
+        #container {
+            width: 701px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<button onclick="localStorage['map'] = JSON.stringify(map)">save</button>
+
+<script>
+    let map = localStorage["map"] ? JSON.parse(localStorage["map"]) : Array(10000).fill(0);
+
+    const HUNDRED = 100;
+    let container = document.getElementById('container');
+    for (let y = 0; y < HUNDRED; y++) {
+        for (let x = 0; x < HUNDRED; x++) {
+            let cell = document.createElement('div'); // 单元格
+            cell.classList.add('cell');
+
+            if (map[HUNDRED * y + x] === 1) { // 有墙，black
+                cell.style.backgroundColor = 'black';
+            }
+            // 以上为画地图
+
+            // 以下为编辑地图
+            cell.addEventListener('mousemove', () => {
+                if (mousedown) {
+                    if (clear) {
+                        cell.style.backgroundColor = '';
+                        map[HUNDRED * y + x] = 0;
+                    } else {
+                        cell.style.backgroundColor = 'black'; // 视觉上
+                        map[HUNDRED * y + x] = 1; // 逻辑上
+                    }
+
+                }
+            });
+
+            container.appendChild(cell);
+        }
+    }
+
+    let mousedown = false;
+    let clear = false;
+
+    document.addEventListener('mousedown', e => {
+        mousedown = true;
+        clear = (e.which === 3) // 按右键
+    });
+
+    document.addEventListener('mouseup', () => mousedown = false);
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+</script>
+
+</body>
+</html>
