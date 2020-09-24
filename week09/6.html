@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .cell {
+            width: 6px;
+            height: 6px;
+            background-color: lightgray;
+            border-bottom: 1px solid white;
+            border-right: 1px solid white;
+        }
+
+        #container {
+            width: 701px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<button onclick="localStorage['map'] = JSON.stringify(map)">save</button>
+
+<script>
+    class Sorted {
+        constructor(data, compare) {
+            this.data = data.slice();
+            this.compare = compare || ((a, b) => a - b);
+        }
+        take() {
+            if (!this.data.length) {
+                return;
+            }
+            let min = this.data[0];
+            let minIndex = 0;
+
+            for (let i = 1; i < this.data.length; i++) {
+                if (this.compare(this.data[i], min) < 0) {
+                    min = this.data[i];
+                    minIndex = i;
+                }
+            }
+
+            this.data[minIndex] = this.data[this.data.length - 1]; // 最小值的位置上用最后一个代替，然后删除最后一个
+            this.data.pop();
+            return min;
+        }
+        give(v) {
+            this.data.push(v);
+        }
+    }
+
+    let map = localStorage["map"] ? JSON.parse(localStorage["map"]) : Array(10000).fill(0);
+
+    const HUNDRED = 100;
+    let container = document.getElementById('container');
+    for (let y = 0; y < HUNDRED; y++) {
+        for (let x = 0; x < HUNDRED; x++) {
+            let cell = document.createElement('div'); // 单元格
+            cell.classList.add('cell');
+
+            if (map[HUNDRED * y + x] === 1) { // 有墙，black
+                cell.style.backgroundColor = 'black';
+            }
+            // 以上为画地图
+
+            // 以下为编辑地图
+            cell.addEventListener('mousemove', () => {
+                if (mousedown) {
+                    if (clear) {
+                        cell.style.backgroundColor = '';
+                        map[HUNDRED * y + x] = 0;
+                    } else {
+                        cell.style.backgroundColor = 'black'; // 视觉上
+                        map[HUNDRED * y + x] = 1; // 逻辑上
+                    }
+
+                }
+            });
+
+            container.appendChild(cell);
+        }
+    }
+
+    let mousedown = false;
+    let clear = false;
+
+    document.addEventListener('mousedown', e => {
+        mousedown = true;
+        clear = (e.which === 3) // 按右键
+    });
+
+    document.addEventListener('mouseup', () => mousedown = false);
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    function sleep(t) {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, t);
+        })
+    }
+
+    async function findPath(map, start, end) {
+        let table = Object.create(map); // 继承的一种方式，table 中用来存储每个节点的上一个节点
+        let queue = new Sorted([start], (a, b) => distance(a) - distance(b)); // 要取跟终点距离最小的那个
+
+        // 入队逻辑
+        async function insert(x, y, pre) {
+            if (x < 0 || x >= HUNDRED || y < 0 || y >= HUNDRED) { // 遇到边时，无法 insert
+                return;
+            }
+            if (table[HUNDRED * y + x]) { // 1/2，即有墙了或者走过了
+                return;
+            }
+
+            await sleep(1);
+            container.children[y * HUNDRED + x].style.backgroundColor = 'lightgreen'; // 走过的变绿
+
+            table[HUNDRED * y + x] = pre; // table 上加 pre
+            queue.give([x, y]);
+        }
+
+        function distance(point) {
+            return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2;
+        }
+
+        while(queue.data.length) {
+            let [x, y] = queue.take(); // 比如 start 是 [0, 0]，queue 初始则是 [[0, 0]]，shift() 的返回值是 [0,0]
+
+            if (x === end[0] && y === end[1]) { // 到了 end 时，去
+                let path = [];
+
+                while(x !== start[0] || y !== start[1]) {
+                    path.push(map[y * HUNDRED + x]);
+                    [x, y] = table[y * HUNDRED + x]; // table 的这个中放的是上一个节点
+                    await sleep(3);
+                    container.children[y * HUNDRED + x].style.backgroundColor = 'purple';
+                }
+
+                return path;
+            }
+
+            await insert(x -1, y, [x, y]); // 四周的四个
+            await insert(x, y - 1, [x, y]);
+            await insert(x + 1, y, [x, y]);
+            await insert(x, y + 1, [x, y]);
+
+            // await insert(x - 1, y - 1, [x, y]); // 斜向，加上后有 bug
+            // await insert(x + 1, y - 1, [x, y]);
+            // await insert(x - 1, y + 1, [x, y]);
+            // await insert(x + 1, y + 1, [x, y]);
+        }
+        return null;
+    }
+
+</script>
+
+</body>
+</html>
